@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Yashmiq Chatbot AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #070b14;
+      --surface: #0e1420;
+      --surface2: #161d2e;
+      --surface3: #1e2740;
+      --border: rgba(99,179,237,0.1);
+      --accent: #3b82f6;
+      --accent2: #06b6d4;
+      --gold: #f59e0b;
+      --green: #10b981;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --user-grad: linear-gradient(135deg, #3b82f6, #06b6d4);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Ambient glow */
+    body::before {
+      content:'';
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% -20%, rgba(59,130,246,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 90% 90%, rgba(6,182,212,0.06) 0%, transparent 60%);
+    }
+
+    /* ── HEADER ── */
+    header {
+      position:relative; z-index:10;
+      padding: 0 20px;
+      height: 62px;
+      background: rgba(7,11,20,0.95);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      position: relative;
+      width: 38px; height: 38px;
+    }
+
+    .brand-logo-ring {
+      position: absolute; inset: 0;
+      border-radius: 12px;
+      background: var(--user-grad);
+      opacity: 0.15;
+      animation: ring-pulse 3s infinite;
+    }
+
+    @keyframes ring-pulse {
+      0%,100% { transform: scale(1); opacity:0.15; }
+      50% { transform: scale(1.1); opacity:0.25; }
+    }
+
+    .brand-logo-inner {
+      position: absolute; inset: 2px;
+      border-radius: 10px;
+      background: var(--surface2);
+      border: 1px solid rgba(59,130,246,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .brand-info h1 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      background: linear-gradient(90deg, #e2e8f0, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-info span {
+      font-size: 0.65rem;
+      color: var(--muted);
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.2);
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--green);
+      letter-spacing: 0.3px;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: live 2s infinite;
+    }
+
+    @keyframes live {
+      0%,100% { opacity:1; box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+      50% { opacity:0.6; box-shadow: 0 0 0 4px rgba(16,185,129,0); }
+    }
+
+    /* ── MESSAGES ── */
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative; z-index: 1;
+      scroll-behavior: smooth;
+    }
+
+    .messages::-webkit-scrollbar { width: 3px; }
+    .messages::-webkit-scrollbar-track { background: transparent; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* Welcome screen */
+    .welcome {
+      margin: auto;
+      text-align: center;
+      padding: 20px 12px;
+      max-width: 500px;
+      animation: welcome-in 0.6s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    @keyframes welcome-in {
+      from { opacity:0; transform: translateY(20px); }
+      to { opacity:1; transform: translateY(0); }
+    }
+
+    .welcome-glow {
+      width: 72px; height: 72px;
+      border-radius: 20px;
+      background: var(--user-grad);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 18px;
+      box-shadow: 0 0 40px rgba(59,130,246,0.3), 0 0 80px rgba(59,130,246,0.1);
+      animation: float 4s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .welcome h2 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff 0%, #93c5fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .welcome p {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.65;
+      margin-bottom: 24px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .chip {
+      padding: 8px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 0.76rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text);
+      transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+    }
+
+    .chip:hover {
+      background: rgba(59,130,246,0.15);
+      border-color: rgba(59,130,246,0.4);
+      color: #93c5fd;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(59,130,246,0.15);
+    }
+
+    /* Message bubbles */
+    .msg {
+      display: flex;
+      gap: 10px;
+      animation: msg-in 0.3s cubic-bezier(0.16,1,0.3,1) both;
+      max-width: 840px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    @keyframes msg-in {
+      from { opacity:0; transform: translateY(8px); }
+      to { opacity:1; transform: translateY(0); }
+    }
+
+    .msg.user { flex-direction: row-reverse; }
+
+    .av {
+      width: 32px; height: 32px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .msg.user .av {
+      background: var(--user-grad);
+      box-shadow: 0 0 12px rgba(59,130,246,0.25);
+    }
+
+    .msg.ai .av {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .bubble {
+      max-width: calc(100% - 46px);
+      padding: 11px 15px;
+      border-radius: 14px;
+      line-height: 1.7;
+      font-size: 0.9rem;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .msg.user .bubble {
+      background: var(--user-grad);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+      font-weight: 500;
+    }
+
+    .msg.ai .bubble {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+
+    /* Loading */
+    .typing {
+      display: flex;
+      gap: 4px;
+      padding: 4px 2px;
+      align-items: center;
+    }
+
+    .td {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: td 1.4s infinite ease-in-out;
+    }
+
+    .td:nth-child(1) { animation-delay: -0.32s; }
+    .td:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes td {
+      0%,80%,100% { transform: scale(0); opacity:0.3; }
+      40% { transform: scale(1); opacity:1; }
+    }
+
+    /* ── INPUT BAR ── */
+    .input-bar {
+      position: relative; z-index: 10;
+      padding: 12px 16px 16px;
+      background: rgba(7,11,20,0.97);
+      backdrop-filter: blur(24px);
+      border-top: 1px solid var(--border);
+    }
+
+    .input-wrap {
+      max-width: 840px;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 8px 8px 8px 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .input-wrap:focus-within {
+      border-color: rgba(59,130,246,0.4);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.07);
+    }
+
+    #userInput {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.9rem;
+      color: var(--text);
+      resize: none;
+      min-height: 28px;
+      max-height: 120px;
+      line-height: 1.5;
+      padding: 4px 0;
+    }
+
+    #userInput::placeholder { color: var(--muted); }
+
+    #sendBtn {
+      width: 38px; height: 38px;
+      background: var(--user-grad);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    }
+
+    #sendBtn:hover:not(:disabled) {
+      transform: scale(1.05);
+      box-shadow: 0 4px 16px rgba(59,130,246,0.35);
+    }
+
+    #sendBtn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    .input-hint {
+      text-align: center;
+      font-size: 0.64rem;
+      color: var(--muted);
+      margin-top: 8px;
+      max-width: 840px;
+      margin-left: auto;
+      margin-right: auto;
+      letter-spacing: 0.2px;
+    }
+
+    @media (max-width: 600px) {
+      .bubble { font-size: 0.87rem; }
+      .welcome h2 { font-size: 1.25rem; }
+      .welcome-glow { width: 60px; height: 60px; font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <div class="brand-logo">
+      <div class="brand-logo-ring"></div>
+      <div class="brand-logo-inner">🤖</div>
+    </div>
+    <div class="brand-info">
+      <h1>Yashmiq Chatbot AI</h1>
+      <span>Pembantu Pintar Bahasa Melayu</span>
+    </div>
+  </div>
+  <div class="status-badge">
+    <div class="live-dot"></div>
+    Aktif
+  </div>
+</header>
+
+<!-- MESSAGES -->
+<div class="messages" id="msgs">
+  <div class="welcome" id="welcome">
+    <div class="welcome-glow">🌟</div>
+    <h2>Assalamualaikum!</h2>
+    <p>Saya <strong>Yashmiq Chatbot AI</strong> — pembantu pintar anda.<br/>Tanya apa sahaja, saya sedia membantu dalam Bahasa Melayu!</p>
+    <div class="chips">
+      <span class="chip" onclick="ask('Bila puasa Ramadhan 2026 di Malaysia?')">🌙 Puasa Ramadhan 2026</span>
+      <span class="chip" onclick="ask('Siapa jurulatih Harimau Malaya sekarang?')">⚽ Jurulatih Harimau Malaya</span>
+      <span class="chip" onclick="ask('Siapa Perdana Menteri Malaysia sekarang?')">🏛️ PM Malaysia</span>
+      <span class="chip" onclick="ask('Harga petrol RON95 terkini Malaysia')">⛽ Harga petrol</span>
+      <span class="chip" onclick="ask('Tulis pantun 4 kerat tentang Malaysia')">📜 Tulis pantun</span>
+      <span class="chip" onclick="ask('Apakah tips belajar yang berkesan?')">📚 Tips belajar</span>
+      <span class="chip" onclick="ask('Terangkan cara buat rendang ayam')">🍗 Resepi rendang</span>
+      <span class="chip" onclick="ask('Apa itu kecerdasan buatan (AI)?')">🤖 Apakah AI?</span>
+    </div>
+  </div>
+</div>
+
+<!-- INPUT -->
+<div class="input-bar">
+  <div class="input-wrap">
+    <textarea
+      id="userInput"
+      placeholder="Tanya saya apa sahaja..."
+      rows="1"
+      onkeydown="handleKey(event)"
+      oninput="autoResize(this)"
+    ></textarea>
+    <button id="sendBtn" onclick="send()">➤</button>
+  </div>
+  <div class="input-hint">Enter untuk hantar &nbsp;·&nbsp; Shift+Enter untuk baris baru</div>
+</div>
+
+<script>
+  const SYSTEM = `Anda adalah Yashmiq Chatbot AI — pembantu pintar Malaysia dalam Bahasa Melayu.
+
+PERATURAN WAJIB:
+1. Jawab SENTIASA dalam Bahasa Melayu yang baik dan tepat
+2. Jangan SESEKALI reka atau mengarang fakta yang tidak wujud
+3. Jangan sebut "Claude" atau "Anthropic" — anda adalah Yashmiq Chatbot AI
+4. Tarikh hari ini: ${new Date().toLocaleDateString('ms-MY',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}
+5. Kalau tidak tahu jawapan tepat, cakap "Saya tidak pasti, sila semak sumber rasmi"
+
+FAKTA MALAYSIA YANG DISAHKAN (JANGAN UBAH):
+- Perdana Menteri Malaysia: Dato' Seri Anwar Ibrahim (sejak Nov 2022)
+- Yang di-Pertuan Agong: Sultan Ibrahim Iskandar (sejak Jan 2024)
+- Jurulatih Harimau Malaya: Peter Cklamovski (dilantik 2024, menggantikan Kim Pan-gon)
+- Puasa Ramadhan 2026: Bermula sekitar 17-18 Februari 2026
+- Hari Raya Aidilfitri 2026: Sekitar 18-19 Mac 2026
+- Mata wang: Ringgit Malaysia (MYR)
+- Ibu negara: Kuala Lumpur
+- Bahasa rasmi: Bahasa Melayu
+
+PENTING — SOALAN TENTANG PEMAIN BOLA SEPAK DAN SUKAN:
+- Hanya sebut pemain yang BENAR-BENAR wujud dan anda pasti
+- Jangan reka nama pemain seperti "Facundo Garces JDT" atau nama yang tidak pasti
+- Kalau tidak pasti, kata "Sila semak laman web rasmi FAM atau JDT"`;
+
+  let history = [];
+  let busy = false;
+
+  document.getElementById('userInput').focus();
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  }
+
+  function ask(q) {
+    document.getElementById('userInput').value = q;
+    autoResize(document.getElementById('userInput'));
+    send();
+  }
+
+  function rmWelcome() {
+    const w = document.getElementById('welcome');
+    if (w) w.remove();
+  }
+
+  function scrollBot() {
+    const m = document.getElementById('msgs');
+    m.scrollTop = m.scrollHeight;
+  }
+
+  function addMsg(text, role) {
+    rmWelcome();
+    const wrap = document.getElementById('msgs');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+
+    const av = document.createElement('div');
+    av.className = 'av';
+    av.textContent = role === 'user' ? 'A' : '🤖';
+
+    const bub = document.createElement('div');
+    bub.className = 'bubble';
+    bub.textContent = text;
+
+    div.appendChild(av);
+    div.appendChild(bub);
+    wrap.appendChild(div);
+    scrollBot();
+    return bub;
+  }
+
+  function addLoading() {
+    rmWelcome();
+    const wrap = document.getElementById('msgs');
+    const div = document.createElement('div');
+    div.className = 'msg ai'; div.id = 'ld';
+
+    const av = document.createElement('div');
+    av.className = 'av'; av.textContent = '🤖';
+
+    const bub = document.createElement('div');
+    bub.className = 'bubble';
+    bub.innerHTML = '<div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+
+    div.appendChild(av); div.appendChild(bub);
+    wrap.appendChild(div); scrollBot();
+  }
+
+  function rmLoading() {
+    const el = document.getElementById('ld');
+    if (el) el.remove();
+  }
+
+  async function send() {
+    if (busy) return;
+    const inp = document.getElementById('userInput');
+    const btn = document.getElementById('sendBtn');
+    const text = inp.value.trim();
+    if (!text) return;
+
+    busy = true;
+    inp.value = ''; inp.style.height = 'auto';
+    inp.disabled = true; btn.disabled = true;
+
+    addMsg(text, 'user');
+    history.push({ role: 'user', content: text });
+    addLoading();
+
+    try {
+      // Groq API - percuma
+      const groqMsgs = [{ role: 'system', content: SYSTEM }];
+      for (const m of history) {
+        groqMsgs.push({ role: m.role, content: m.content });
+      }
+
+      const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer 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'
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: groqMsgs,
+          temperature: 0.1,
+          max_tokens: 1024
+        })
+      });
+
+      rmLoading();
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error?.message || `Ralat: ${resp.status}`);
+      }
+
+      const data = await resp.json();
+      const reply = data.choices?.[0]?.message?.content || 'Maaf, tiada respons.';
+
+      history.push({ role: 'assistant', content: reply });
+      addMsg(reply, 'ai');
+
+    } catch(e) {
+      rmLoading();
+      console.error(e);
+      const m = e.message || '';
+      let errTxt = '⚠️ Maaf, berlaku ralat. Sila cuba lagi.';
+      if (m.includes('CREDIT_ERROR')) {
+        errTxt = '⚠️ Kredit API habis. Sila hubungi admin untuk top up.';
+      } else if (m.includes('Failed to fetch') || m.includes('NetworkError')) {
+        errTxt = '⚠️ Masalah sambungan internet. Sila semak sambungan anda.';
+      } else if (m.includes('401') || m.includes('authentication')) {
+        errTxt = '⚠️ Masalah pengesahan API. Sila hubungi admin.';
+      }
+      addMsg(errTxt, 'ai');
+      history.pop();
+    }
+
+    busy = false;
+    inp.disabled = false; btn.disabled = false;
+    inp.focus();
+  }
+</script>
+</body>
+</html>
